@@ -48,4 +48,4 @@ for station in river_now:
     LongRiverData[fname_prefix].append(station)
 
 with open(store_data_full, 'w') as f:
-    json.dump(LongRiverData, f, ensure_ascii=False)
+    json.dump(LongRiverData, f, ensure_ascii=False, indent=0)
