@@ -32,7 +32,10 @@ jobs:
     # Runs a single command using the runners shell
     - name: Run main.py
       run: python main.py
-    
+
+    - name: Check diff
+      run: git diff
+      
     - name: Add & Commit
       uses: EndBug/add-and-commit@v4.2.1
 
