@@ -43,9 +43,6 @@ for station in river_now:
         write_csv_header(station, fname_prefix)
     write_csv_row(station, fname_prefix)
 
-    if fname_prefix not in LongRiverData:
-        LongRiverData[fname_prefix] = []
-    LongRiverData[fname_prefix].append(station)
 
 with open(store_data_full, 'w') as f:
     json.dump(LongRiverData, f, ensure_ascii=False, indent=0)
