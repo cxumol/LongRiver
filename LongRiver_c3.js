@@ -80,7 +80,7 @@ for (let fileOrder = 0; fileOrder < allFilesToCatch.length; fileOrder++) {
   chart.id = `chart-${fileOrder}`;
 
   let chartTitle = document.createElement('h4');
-  chartTitle.innerHTML = allFilesToCatch[fileOrder].slice(0, -4);
+  chartTitle.innerHTML = allFilesToCatch[fileOrder].slice(0, -4).replace('_',' ');
 
   allCharts.append(chartTitle);
   allCharts.append(chart);
