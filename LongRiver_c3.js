@@ -39,7 +39,7 @@ var genChart = function(fileOrder, chartId , type = 'station') {
       x: {
         //type: 'time',
         tick: {
-          count: 8,
+          count: 7,
           format: function(x) {
             return new Date(x).toLocaleDateString('zh-CN');
           } //toLocaleDateString
