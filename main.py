@@ -2,10 +2,28 @@ import requests
 import re
 import json
 import csv
-from os import path
+from os import path,listdir
+import pathlib
+import shutil
 
-store_data_folder = "./data/"
+####### slice data to correlated months
+from datetime import datetime, timezone, timedelta
+# Why use the running time rather than latest data timestamp? 
+# Because year-month have to be known at first due to determine file storage location in our program's logic
+yr_mth = datetime.now(timezone(timedelta(hours=8))).strftime("%Y-%m")
+
+store_data_folder = "./data/%s/"%yr_mth
 store_data_full = store_data_folder + "LongRiver.json"
+
+pathlib.Path(store_data_folder).mkdir(parents=True, exist_ok=True) # "$mkdir -p" equalavant
+
+# hotfix: move data file from old location to new one
+for fn in listdir("./data/"):
+    if fn.endswith(".csv") or fn.endswith(".json"):
+        thismove=shutil.move(path.join('./data/', fn) , store_data_folder)
+        print("MOVE", thismove)
+
+####### end of slice data to correlated months
 
 def write_csv_header(data,fname_prefix):
     with open('{}.csv'.format(fname_prefix), 'w', newline='') as f:
