@@ -16,7 +16,31 @@ let allFilesToCatch = [
 ];
 const allCharts = document.getElementById('allCharts');
 
-var genChart = function(fileOrder, chartId , type = 'station') {
+let updateAllCharts = function(dataDir){
+  allCharts.innerHTML = ""; // empty allCharts
+  
+  for (let fileOrder = 0; fileOrder < allFilesToCatch.length; fileOrder++) {
+  //console.log(fileOrder);
+  let chart = document.createElement('div');
+  chart.id = `chart-${fileOrder}`;
+
+  let chartTitle = document.createElement('h4');
+  chartTitle.innerHTML = allFilesToCatch[fileOrder].slice(0, -4).replace('_',' ');
+
+  allCharts.append(chartTitle);
+  allCharts.append(chart);
+  if ( allFilesToCatch[fileOrder].includes('水库') ) {
+    genChart(fileOrder, chart.id, dataDir, type  = 'reservoir');
+  } else {
+  genChart(fileOrder, chart.id); 
+  }
+}
+
+}
+
+
+
+var genChart = function(fileOrder, chartId, dataDir , type = 'station') {
   let config = {
     bindto: document.getElementById(chartId),
     data: {
@@ -74,20 +98,34 @@ var genChart = function(fileOrder, chartId , type = 'station') {
   return c3.generate(config);
 }
 
+let updateDataDirectory = function(){
+  const selectElement = document.getElementById('year-month-selector');
 
-for (let fileOrder = 0; fileOrder < allFilesToCatch.length; fileOrder++) {
-  //console.log(fileOrder);
-  let chart = document.createElement('div');
-  chart.id = `chart-${fileOrder}`;
-
-  let chartTitle = document.createElement('h4');
-  chartTitle.innerHTML = allFilesToCatch[fileOrder].slice(0, -4).replace('_',' ');
-
-  allCharts.append(chartTitle);
-  allCharts.append(chart);
-  if ( allFilesToCatch[fileOrder].includes('水库') ) {
-    genChart(fileOrder, chart.id,  type  = 'reservoir');
-  } else {
-  genChart(fileOrder, chart.id); 
+  fetch('https://api.github.com/repos/cxumol/LongRiver/contents/data?ref=master')
+  .then(response => response.json())
+  .then(data => {
+    let allDir = []
+    data.forEach(each => allDir.push(each.name));
+    // console.log(allDir)
+    return allDir;
+  })
+  .then(function (allDir){
+    for (let i = allDir.length-1; i>=0 ; i--){
+      let opt = document.createElement('option');
+      opt.setAttribute("value", allDir[i]);
+      opt.textContent=allDir[i];
+      // console.log(allDir[i]);
+      selectElement.append(opt);
+    }
+    updateAllCharts(allDir[allDir.length-1]);
   }
+  );
+
+  selectElement.addEventListener('change', (event) => {
+    const result = document.querySelector('.result');
+    let dataDir = event.target.value;
+    updateAllCharts(dataDir);
+  });
 }
+
+updateDataDirectory();
