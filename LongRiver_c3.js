@@ -32,7 +32,7 @@ let updateAllCharts = function(dataDir){
   if ( allFilesToCatch[fileOrder].includes('水库') ) {
     genChart(fileOrder, chart.id, dataDir, type  = 'reservoir');
   } else {
-  genChart(fileOrder, chart.id); 
+  genChart(fileOrder, chart.id, dataDir); 
   }
 }
 
