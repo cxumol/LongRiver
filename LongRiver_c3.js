@@ -20,7 +20,8 @@ var genChart = function(fileOrder, chartId , type = 'station') {
   let config = {
     bindto: document.getElementById(chartId),
     data: {
-      url: `https://cdn.jsdelivr.net/gh/cxumol/LongRiver@master/data/2020-07/${allFilesToCatch[fileOrder]}`,
+//       url: `https://cdn.jsdelivr.net/gh/cxumol/LongRiver@master/data/2020-07/${allFilesToCatch[fileOrder]}`,
+      url: `https://raw.githack.com/cxumol/LongRiver/master/data/2020-07/${allFilesToCatch[fileOrder]}`,
       x: 'tm',
       hide: ['oq', 'stcd', 'wptn',  'rvnm', 'stnm'],
       names: {
