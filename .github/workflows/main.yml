@@ -19,15 +19,20 @@ jobs:
     # Steps represent a sequence of tasks that will be executed as part of the job
     steps:
     # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v4
     
-    - uses: actions/setup-python@v2
+    - uses: actions/setup-python@v5
+      with:
+        python-version: "3.x"
     
     - name: setup other enviroment
       run: |
         pwd
         python --version
         pip install -U requests
+
+    - name: Run tests
+      run: python -m unittest discover -s tests
 
     # Runs a single command using the runners shell
     - name: Run main.py
@@ -37,5 +42,5 @@ jobs:
       run: git diff
       
     - name: Add & Commit
-      uses: EndBug/add-and-commit@v4.2.1
+      uses: EndBug/add-and-commit@v10
 

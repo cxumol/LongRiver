@@ -1,2 +1,4 @@
 crontab.log
 .venv
+.codex-temp/
+__pycache__/

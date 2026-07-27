@@ -1,10 +1,11 @@
-import requests
-import re
 import json
 import csv
 from os import path,listdir
 import pathlib
 import shutil
+
+from longriver import fetch_river_data
+
 
 ####### slice data to correlated months
 from datetime import datetime, timezone, timedelta
@@ -41,18 +42,7 @@ else:
     with open(store_data_full, "r", encoding="utf-8") as f:
         LongRiverData = json.load(f)
 
-urls = [
-    "http://www.cjh.com.cn/sqindex.html",
-    "http://www.cjh.com.cn/sssqcwww.html",
-    "http://www.cjh.com.cn/sssqw3.html",
-]
-
-data = []
-
-for url in urls:
-    html = requests.get(url).text
-    river_now = json.loads(re.findall("var sssq = (.*);", html)[0])
-    data.extend(river_now)
+data = fetch_river_data()
 
 print(data)
 
