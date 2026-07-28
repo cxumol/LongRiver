@@ -1,10 +1,14 @@
+import csv
 import unittest
+from pathlib import Path
+from tempfile import TemporaryDirectory
 from unittest.mock import Mock, call, patch
 
 import requests
 
 from longriver import (
     SOURCE_URLS,
+    append_csv_record,
     fetch_all_river_data,
     fetch_river_data,
     merge_river_data,
@@ -110,6 +114,38 @@ class MergeRiverDataTests(unittest.TestCase):
 
         self.assertEqual([station["stcd"] for station in data], ["2", "1"])
         self.assertEqual(fetch.call_args_list, [call(url) for url in SOURCE_URLS])
+
+
+class AppendCsvRecordTests(unittest.TestCase):
+    def test_missing_optional_field_does_not_shift_columns(self) -> None:
+        with TemporaryDirectory() as temp_dir:
+            csv_path = Path(temp_dir) / "station.csv"
+            csv_path.write_text(
+                "q,rvnm,stcd,stnm,tm,wptn,z\n",
+                encoding="utf-8",
+            )
+            append_csv_record(
+                csv_path,
+                {
+                    "rvnm": "长江干流",
+                    "stcd": "60112200",
+                    "stnm": "汉口",
+                    "tm": 1781002800000,
+                    "wptn": "4",
+                    "z": "23.380",
+                },
+            )
+
+            with csv_path.open(
+                "r",
+                encoding="utf-8",
+                newline="",
+            ) as source:
+                row = next(csv.DictReader(source))
+
+        self.assertEqual(row["q"], "")
+        self.assertEqual(row["stcd"], "60112200")
+        self.assertEqual(row["tm"], "1781002800000")
 
 
 if __name__ == "__main__":

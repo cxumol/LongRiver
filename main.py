@@ -4,7 +4,7 @@ from os import path,listdir
 import pathlib
 import shutil
 
-from longriver import fetch_all_river_data
+from longriver import append_csv_record, fetch_all_river_data
 
 
 ####### slice data to correlated months
@@ -31,10 +31,6 @@ def write_csv_header(data,fname_prefix):
         headers = list(data.keys())
         csv.writer(f).writerow(headers)
 
-def write_csv_row(data,fname_prefix):
-    with open("{}.csv".format(fname_prefix), "a", newline="", encoding="utf-8") as f:
-        csv.writer(f).writerow(data.values())
-
 # LongRiverData wil be a json of summary
 if not path.isfile(store_data_full):
     LongRiverData = {}
@@ -59,7 +55,7 @@ for station in data:
 
     if not path.isfile('{}.csv'.format(fname_prefix)):
         write_csv_header(station, fname_prefix)
-    write_csv_row(station, fname_prefix)
+    append_csv_record('{}.csv'.format(fname_prefix), station)
 
 
 with open(store_data_full, "w", encoding="utf-8") as f:
