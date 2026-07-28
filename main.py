@@ -1,10 +1,11 @@
-import requests
-import re
 import json
 import csv
 from os import path,listdir
 import pathlib
 import shutil
+
+from longriver import fetch_all_river_data
+
 
 ####### slice data to correlated months
 from datetime import datetime, timezone, timedelta
@@ -41,18 +42,7 @@ else:
     with open(store_data_full, "r", encoding="utf-8") as f:
         LongRiverData = json.load(f)
 
-urls = [
-    "http://www.cjh.com.cn/sqindex.html",
-    "http://www.cjh.com.cn/sssqcwww.html",
-    "http://www.cjh.com.cn/sssqw3.html",
-]
-
-data = []
-
-for url in urls:
-    html = requests.get(url).text
-    river_now = json.loads(re.findall("var sssq = (.*);", html)[0])
-    data.extend(river_now)
+data = fetch_all_river_data()
 
 print(data)
 
@@ -61,8 +51,9 @@ for station in data:
 
     if fname_prefix not in LongRiverData:
         LongRiverData[fname_prefix] = []
-    # skip if update time has not yet changed
-    if LongRiverData[fname_prefix] and LongRiverData[fname_prefix][-1]['tm'] == station['tm']:
+    # Sources overlap, so skip observations already stored at the same station time.
+    known_times = {item['tm'] for item in LongRiverData[fname_prefix]}
+    if station['tm'] in known_times:
         continue
     LongRiverData[fname_prefix].append(station)
 
