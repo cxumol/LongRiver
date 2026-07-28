@@ -1,7 +1,9 @@
+import csv
 import json
 import re
 import time
 from collections.abc import Iterable
+from pathlib import Path
 from typing import Any, cast
 
 import requests
@@ -86,3 +88,20 @@ def fetch_all_river_data(
 ) -> list[RiverStation]:
     """Fetch and merge all configured river data sources."""
     return merge_river_data(fetch_river_data(url) for url in urls)
+
+
+def append_csv_record(
+    csv_path: str | Path,
+    station: RiverStation,
+) -> None:
+    """Append a station record aligned to the CSV's existing header."""
+    path = Path(csv_path)
+    with path.open("r", encoding="utf-8", newline="") as source:
+        fieldnames = next(csv.reader(source))
+
+    with path.open("a", encoding="utf-8", newline="") as output:
+        csv.DictWriter(
+            output,
+            fieldnames=fieldnames,
+            extrasaction="ignore",
+        ).writerow(station)
