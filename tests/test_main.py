@@ -55,6 +55,83 @@ class ParseRiverDataTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "malformed"):
             parse_river_data('<script>var sssq = [{"stcd": "1"}];</script>')
 
+    def test_parses_sssq_when_other_script_variables_come_first(self) -> None:
+        html = """
+        <script>
+            var _weekday = ["日", "一"];
+            var sssq = [
+                {
+                    "stcd": "62916275",
+                    "stnm": "水口闸",
+                    "tm": 1785139200000
+                }
+            ];
+        </script>
+        """
+
+        data = parse_river_data(html, default_rvnm="长江下游")
+
+        self.assertEqual(data[0]["rvnm"], "长江下游")
+
+    def test_uses_station_river_name_before_source_default(self) -> None:
+        html = """
+        <script>
+            var sssq = [
+                {
+                    "stcd": "60115000",
+                    "stnm": "大通",
+                    "tm": 1785139200000
+                }
+            ];
+        </script>
+        """
+
+        data = parse_river_data(html, default_rvnm="长江下游")
+
+        self.assertEqual(data[0]["rvnm"], "长江干流")
+
+    def test_treats_null_string_river_name_as_missing(self) -> None:
+        html = """
+        <script>
+            var sssq = [
+                {
+                    "rvnm": "(null)",
+                    "stcd": "61502800",
+                    "stnm": "梅田湖",
+                    "tm": 1785139200000
+                }
+            ];
+        </script>
+        """
+
+        data = parse_river_data(html, default_rvnm="长江中游")
+
+        self.assertEqual(data[0]["rvnm"], "长江中游")
+
+    def test_normalizes_uppercase_hanjiang_fields(self) -> None:
+        html = """
+        <script>
+            var sssq = [
+                {
+                    "Q": 1580.0,
+                    "TM": 1785139200000,
+                    "WPTN": "5",
+                    "Z": 179.56,
+                    "stcd": "61801700",
+                    "stnm": "白河"
+                }
+            ];
+        </script>
+        """
+
+        data = parse_river_data(html, default_rvnm="汉江")
+
+        self.assertEqual(data[0]["q"], 1580.0)
+        self.assertEqual(data[0]["tm"], 1785139200000)
+        self.assertEqual(data[0]["wptn"], "5")
+        self.assertEqual(data[0]["z"], 179.56)
+        self.assertEqual(data[0]["rvnm"], "汉江")
+
 
 class FetchRiverDataTests(unittest.TestCase):
     @patch("longriver.requests.get")
@@ -104,16 +181,48 @@ class MergeRiverDataTests(unittest.TestCase):
         )
 
     @patch("longriver.fetch_river_data")
-    def test_fetches_both_configured_sources(self, fetch: Mock) -> None:
+    def test_fetches_all_configured_sources(self, fetch: Mock) -> None:
         fetch.side_effect = [
-            [{"rvnm": "长江干流", "stcd": "1", "stnm": "甲", "tm": 200}],
-            [{"rvnm": "长江干流", "stcd": "2", "stnm": "乙", "tm": 100}],
+            [
+                {
+                    "rvnm": "长江干流",
+                    "stcd": str(index),
+                    "stnm": "甲",
+                    "tm": index,
+                }
+            ]
+            for index, _ in enumerate(SOURCE_URLS)
         ]
 
         data = fetch_all_river_data()
 
-        self.assertEqual([station["stcd"] for station in data], ["2", "1"])
+        self.assertEqual(
+            [station["stcd"] for station in data],
+            [str(index) for index, _ in enumerate(SOURCE_URLS)],
+        )
         self.assertEqual(fetch.call_args_list, [call(url) for url in SOURCE_URLS])
+
+    @patch("longriver.fetch_river_data")
+    def test_skips_failed_source_when_other_sources_succeed(self, fetch: Mock) -> None:
+        fetch.side_effect = [
+            RuntimeError("bad source"),
+            [{"rvnm": "长江干流", "stcd": "1", "stnm": "甲", "tm": 100}],
+        ]
+
+        data = fetch_all_river_data(["http://bad.test", "http://good.test"])
+
+        self.assertEqual([station["stcd"] for station in data], ["1"])
+        self.assertEqual(
+            fetch.call_args_list,
+            [call("http://bad.test"), call("http://good.test")],
+        )
+
+    @patch("longriver.fetch_river_data")
+    def test_raises_when_all_sources_fail(self, fetch: Mock) -> None:
+        fetch.side_effect = RuntimeError("bad source")
+
+        with self.assertRaisesRegex(RuntimeError, "all configured sources"):
+            fetch_all_river_data(["http://bad.test"])
 
 
 class AppendCsvRecordTests(unittest.TestCase):
